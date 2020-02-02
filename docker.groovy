@@ -1,8 +1,9 @@
 #!groovy
+// Run docker build
 properties([disableConcurrentBuilds()])
 
 pipeline {
-    agent {
+    agent { 
         label 'master'
         }
     triggers { pollSCM('* * * * *') }
@@ -11,15 +12,26 @@ pipeline {
         timestamps()
     }
     stages {
-        stage("First step") {
+        stage("docker login") {
             steps {
-                sh 'scp Dockerfile root@ubuntu2:/home/ubuntu/docker/alpine/'
-                sh 'ssh root@ubuntu2 \'docker build /home/ubuntu/docker/alpine/ -t mytool:latest \''
+                echo " ============== docker login =================="
+                withCredentials([usernamePassword(credentialsId: 'balandinas_dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh " ssh root@ubuntu2 docker login -u $USERNAME -p $PASSWORD"
+                }
             }
         }
-        stage("Second step") {
+        stage("create docker image") {
             steps {
-                sh 'ssh root@ubuntu2 \'uptime\''
+                echo " ============== start building image =================="
+                sh 'scp Dockerfile root@ubuntu2:/home/ubuntu/docker/alpine/'
+                sh 'ssh root@ubuntu2 \'docker build /home/ubuntu/docker/alpine/ -t balandinas/mytool:latest \''
+                //sh 'ssh root@ubuntu2 docker build -t balandinas/mytool:latest '
+            }
+        }
+        stage("docker push") {
+            steps {
+                echo " ============== start pushing image =================="
+                sh 'ssh root@ubuntu2 \'docker push balandinas/mytool:latest \''
             }
         }
     }
