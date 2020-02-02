@@ -14,7 +14,7 @@ pipeline {
         stage("First step") {
             steps {
                 sh 'scp Dockerfile root@ubuntu2:/home/ubuntu/docker/alpine/'
-                sh 'ssh root@ubuntu2 \'docker build /home/ubuntu/docker/alpine/\''
+                sh 'ssh root@ubuntu2 \'docker build /home/ubuntu/docker/alpine/ -t mytool:latest \''
             }
         }
         stage("Second step") {
